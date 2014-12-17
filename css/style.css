@@ -406,14 +406,6 @@
 					opacity: 0.75;
 				}
 
-				#overlayer h3 {
-					font-size: 2.5em;
-					font-weight: bold;
-					text-align: center;
-					margin: .25em .25em 0 0.25em;
-					opacity: 0.75;
-				}
-
 				#overlayer p {
 					font-size: 1.25em;
 					text-align: center;
@@ -458,6 +450,32 @@
 					padding: 1%;
 				}
 
+				.project-box img {
+					border-radius: 50%;
+					width: 25%;
+					display: inline;
+					vertical-align: middle;
+					margin-bottom: 2%;
+				}
+
+				.project-box h3 {
+					font-size: 2.25em;
+					font-weight: bold;
+					text-align: center;
+					margin-left: 7%;
+					opacity: 0.75;
+					display: inline-block;
+					vertical-align: middle;
+				}
+
+				.project-box .proj-title {
+					display: inline;
+				}
+
+				.project-box .info {
+					display: inline;
+				}
+
 				#proj-0 {
 					float: left;
 					margin-left: 32.5%;
@@ -482,6 +500,20 @@
 
 				.button:hover {
 					transform: scale(1.05);
+				}
+
+				.button p {
+					margin-top:-3%;
+				}
+
+				.more {
+					width: 4em;
+					height: 4em;
+					text-size: 1em;
+					position: absolute;
+					border-radius:50%;
+					right: 43%;
+					bottom: 2%;
 				}
 
 				.next {
