@@ -1,166 +1,236 @@
 /*
-	Aerial by HTML5 UP
+	Astral by HTML5 UP
 	html5up.net | @n33co
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
 
-(function() {
+(function($) {
 
-	skel.init({
-		reset: 'full',
-		breakpoints: {
-			'global': { range: '*', href: 'css/style.css', viewport: { scalable: false } },
-			'wide': { range: '-1680', href: 'css/style-wide.css' },
-			'normal': { range: '-1280', href: 'css/style-normal.css' },
-			'mobile': { range: '-736', href: 'css/style-mobile.css' },
-			'mobilep': { range: '-480', href: 'css/style-mobilep.css' }
-		}
-	});
+	/*********************************************************************************/
+	/* Settings                                                                      */
+	/*********************************************************************************/
 
-	// Events (JS).
+		var settings = {
 
-		/*// Remove "loading" class once the page has fully loaded.
-			window.onload = function() {
-				document.body.className = '';
+			// Speed to resize panel.
+				resizeSpeed: 600,
+			
+			// Speed to fade in/out.
+				fadeSpeed: 300,
+			
+			// Size factor.
+				sizeFactor: 11.5,		
+			
+			// Minimum point size.
+				sizeMin: 15,			
+			
+			// Maximum point size.
+				sizeMax: 20			
+
+		};
+
+	/*********************************************************************************/
+	/* skel                                                                          */
+	/*********************************************************************************/
+		
+		skel.init({
+			reset: 'full',
+			pollOnce: true,
+			breakpoints: {
+				'global':	{ range: '*', href: 'css/style.css' },
+				'desktop':	{ range: '737-', href: 'css/style-desktop.css', containers: 1200, grid: { gutters: 25 }, viewport: { width: 1080, scalable: false } },
+				'mobile':	{ range: '-736', href: 'css/style-mobile.css', containers: '100%!', grid: { collapse: true, gutters: 15 }, viewport: { scalable: false } }
 			}
-
-		// Prevent scrolling on touch.
-			window.ontouchmove = function() {
-				return false;
-			}
-
-		// Fix scroll position on orientation change.
-			window.onorientationchange = function() {
-				document.body.scrollTop = 0;
-			}*/
-
-
-
-	// Events (jQuery).
-	// Aerial doesn't need jQuery, but if you're going to use it anyway remove the
-	// block of JS events above and use the jQuery-based ones below instead.
-
-	var mouse = true;
-	var margin = '32.5%';
-	var size = 35;
-	var extra = 3;
-	var index = 0;
-	var length = 4;
-
-	//moves one project to the right (+1 to index)
-	function moveLeftProjects() {
-		if (index === length - 1) {
-			$('#proj-'+index.toString()).css('float', 'right');
-			$('#proj-'+index.toString()).css('marginRight', margin);
-			$('#proj-'+index.toString()).animate({opacity: 0, marginRight: '0%'}, 1000, function() {
-				resetProjects();
-			});
-			return;
-		}
-		index += 1;
-		//move project on right to center
-		$('#proj-'+index.toString()).animate({ marginRight: margin, opacity: 1 }, 1000, function() {
-			$(this).css('float', 'left');
-			$(this).css('margin-left',(parseFloat(margin)-size).toString() + '%');
-			$(this).css('pointerEvents', 'auto');
-			$(this).css('margin-right',0);
 		});
-		//move center project to left
-		$('#proj-'+(index-1).toString()).css('pointerEvents', 'none');
-		if (index - 1 === 0) {
-			$('#proj-'+(index-1).toString()).animate({marginLeft: '0%', opacity: 0}, 1000);//change opacity
-		} else {
-			$('#proj-'+(index-1).toString()).animate({marginLeft: '-'+size.toString()+'%', opacity: 0}, 1000);//change opacity
-		}
-	}
-	//resets projects when project menu is left
-	function resetProjects() {
-		//reset all but first to right side
-		while (index > 0) {
-			$('#proj-'+index.toString()).css('opacity', 0);//change opacity
-			$('#proj-'+index.toString()).css('float', 'right');
-			$('#proj-'+index.toString()).css('margin-right', '0%');
-			$('#proj-'+index.toString()).css('pointerEvents', 'none');
-			$('#proj-'+index.toString()).css('margin-left', '-'+(size+extra).toString()+'%');
-			index -= 1;
-		}
-		$('#proj-1').css('margin-left', '-'+extra.toString()+'%');
-		//retset first to left
-		$('#proj-0').animate({opacity: 1, marginLeft: margin, marginRight: 0}, 1000);
-		$('#proj-0').css('pointerEvents', 'auto');
-		$('#proj-0').css('float', 'left');
-	}
 
-		$( document ).ready(function() {
-			console.log($('proj-0').css('margin-right'));
+	/*********************************************************************************/
+	/* Main                                                                          */
+	/*********************************************************************************/
 
-		    $('#contact').click(function() {
-					/*$("#form-main").fadeTo('slow', 1);*/
-					$("#overlayer").fadeTo('slow',1);
-					$("#overlay").css('z-index', 1);
-					$("#main").css('pointerEvents', 'none');
-				});
+		var	$window = $(window);
+		
+		$window.on('load', function() {
 
-				$('#overlayer').click(function() {/*replace overlay with submit to use contact form*/
-					/*$('#form-main').fadeTo('fast', 0);*/
-					if (mouse) {
-						$("#overlayer").fadeTo('fast', 0);
-						$('#about-box').animate({ marginTop: '15%', opacity: 1 }, 1000);
-						$("#overlay").css('z-index', 0);
-						$("#main").css('pointerEvents', 'auto');
-						resetProjects();
+			var	$body = $('body'),
+				$main = $('#main'),
+				$panels = $main.find('.panel'),
+				$hbw = $('html,body,window'),
+				$footer = $('#footer'),
+				$wrapper = $('#wrapper'),
+				$nav = $('#nav'), $nav_links = $nav.find('a'),
+				$jumplinks = $('.jumplink'),
+				$form = $('form'),
+				panels = [],
+				activePanelId = null,
+				firstPanelId = null,
+				isLocked = false,
+				hash = window.location.hash.substring(1);
+		
+			if (skel.vars.isTouch) {
+				
+				settings.fadeSpeed = 0;
+				settings.resizeSpeed = 0;
+				$nav_links.find('span').remove();
+			
+			}
+
+			if (skel.isActive('desktop')) {
+				
+				// Body.
+					$body._resize = function() {
+						var factor = ($window.width() * $window.height()) / (1440 * 900);
+						$body.css('font-size', Math.min(Math.max(Math.floor(factor * settings.sizeFactor), settings.sizeMin), settings.sizeMax) + 'pt');
+						$main.height(panels[activePanelId].outerHeight());
+						$body._reposition();
+					};
+
+					$body._reposition = function() {
+						if (skel.vars.isTouch && (window.orientation == 0 || window.orientation == 180))
+							$wrapper.css('padding-top', Math.max((($window.height() - (panels[activePanelId].outerHeight() + $footer.outerHeight())) / 2) - $nav.height(), 30) + 'px');
+						else
+							$wrapper.css('padding-top', ((($window.height() - panels[firstPanelId].height()) / 2) - $nav.height()) + 'px');
+					};
+					
+				// Panels.
+					$panels.each(function(i) {
+						var t = $(this), id = t.attr('id');
+						
+						panels[id] = t;
+					
+						if (i == 0) {
+							
+							firstPanelId = id;
+							activePanelId = id;
+						
+						}
+						else
+							t.hide();
+							
+						t._activate = function(instant) {
+						
+							// Check lock state and determine whether we're already at the target.
+								if (isLocked
+								||	activePanelId == id)
+									return false;
+
+							// Lock.
+								isLocked = true;
+								
+							// Change nav link (if it exists).
+								$nav_links.removeClass('active');
+								$nav_links.filter('[href="#' + id + '"]').addClass('active');
+								
+							// Change hash.
+								if (i == 0)
+									window.location.hash = '#';
+								else
+									window.location.hash = '#' + id;
+
+							// Add bottom padding.
+								var x = parseInt($wrapper.css('padding-top')) +
+										panels[id].outerHeight() +
+										$nav.outerHeight() +
+										$footer.outerHeight();
+							
+								if (x > $window.height())
+									$wrapper.addClass('tall');
+								else
+									$wrapper.removeClass('tall');
+										
+							// Fade out active panel.
+								$footer.fadeTo(settings.fadeSpeed, 0.0001);
+								panels[activePanelId].fadeOut(instant ? 0 : settings.fadeSpeed, function() {
+				
+									// Set new active.
+										activePanelId = id;
+
+										// Force scroll to top.
+											$hbw.animate({
+												scrollTop: 0
+											}, settings.resizeSpeed, 'swing');
+
+										// Reposition.
+											$body._reposition();
+											
+										// Resize main to height of new panel.
+											$main.animate({
+												height: panels[activePanelId].outerHeight()
+											}, instant ? 0 : settings.resizeSpeed, 'swing', function() {
+											
+												// Fade in new active panel.
+													$footer.fadeTo(instant ? 0 : settings.fadeSpeed, 1.0);
+													panels[activePanelId].fadeIn(instant ? 0 : settings.fadeSpeed, function() {
+														
+														// Unlock.
+															isLocked = false;
+
+													});
+											});
+										
+								});
+						
+						};
+						
+					});
+
+				// Nav + Jumplinks.
+					$nav_links.add($jumplinks).click(function(e) {
+						var t = $(this), href = t.attr('href'), id;
+					
+						if (href.substring(0,1) == '#') {
+							
+							e.preventDefault();
+							e.stopPropagation();
+
+							id = href.substring(1);
+							
+							if (id in panels)
+								panels[id]._activate();
+						
+						}
+					
+					});
+				
+				// Window.
+					$window
+						.resize(function() {
+						
+							if (!isLocked)
+								$body._resize();
+						
+						});
+						
+					if (skel.vars.IEVersion < 9)
+						$window
+							.on('resize', function() {
+								$wrapper.css('min-height', $window.height());
+							});
+
+				// Forms (IE<10).
+					if ($form.length > 0) {
+						
+						if (skel.vars.IEVersion < 10) {
+							$.fn.n33_formerize=function(){var _fakes=new Array(),_form = $(this);_form.find('input[type=text],textarea').each(function() { var e = $(this); if (e.val() == '' || e.val() == e.attr('placeholder')) { e.addClass('formerize-placeholder'); e.val(e.attr('placeholder')); } }).blur(function() { var e = $(this); if (e.attr('name').match(/_fakeformerizefield$/)) return; if (e.val() == '') { e.addClass('formerize-placeholder'); e.val(e.attr('placeholder')); } }).focus(function() { var e = $(this); if (e.attr('name').match(/_fakeformerizefield$/)) return; if (e.val() == e.attr('placeholder')) { e.removeClass('formerize-placeholder'); e.val(''); } }); _form.find('input[type=password]').each(function() { var e = $(this); var x = $($('<div>').append(e.clone()).remove().html().replace(/type="password"/i, 'type="text"').replace(/type=password/i, 'type=text')); if (e.attr('id') != '') x.attr('id', e.attr('id') + '_fakeformerizefield'); if (e.attr('name') != '') x.attr('name', e.attr('name') + '_fakeformerizefield'); x.addClass('formerize-placeholder').val(x.attr('placeholder')).insertAfter(e); if (e.val() == '') e.hide(); else x.hide(); e.blur(function(event) { event.preventDefault(); var e = $(this); var x = e.parent().find('input[name=' + e.attr('name') + '_fakeformerizefield]'); if (e.val() == '') { e.hide(); x.show(); } }); x.focus(function(event) { event.preventDefault(); var x = $(this); var e = x.parent().find('input[name=' + x.attr('name').replace('_fakeformerizefield', '') + ']'); x.hide(); e.show().focus(); }); x.keypress(function(event) { event.preventDefault(); x.val(''); }); });  _form.submit(function() { $(this).find('input[type=text],input[type=password],textarea').each(function(event) { var e = $(this); if (e.attr('name').match(/_fakeformerizefield$/)) e.attr('name', ''); if (e.val() == e.attr('placeholder')) { e.removeClass('formerize-placeholder'); e.val(''); } }); }).bind("reset", function(event) { event.preventDefault(); $(this).find('select').val($('option:first').val()); $(this).find('input,textarea').each(function() { var e = $(this); var x; e.removeClass('formerize-placeholder'); switch (this.type) { case 'submit': case 'reset': break; case 'password': e.val(e.attr('defaultValue')); x = e.parent().find('input[name=' + e.attr('name') + '_fakeformerizefield]'); if (e.val() == '') { e.hide(); x.show(); } else { e.show(); x.hide(); } break; case 'checkbox': case 'radio': e.attr('checked', e.attr('defaultValue')); break; case 'text': case 'textarea': e.val(e.attr('defaultValue')); if (e.val() == '') { e.addClass('formerize-placeholder'); e.val(e.attr('placeholder')); } break; default: e.val(e.attr('defaultValue')); break; } }); window.setTimeout(function() { for (x in _fakes) _fakes[x].trigger('formerize_sync'); }, 10); }); return _form; };
+							$form.n33_formerize();
+						}
+
 					}
-				});
 
-				$('#about-box').mouseenter(function() {
-					mouse = false;
-				});
+				// CSS polyfills (IE<9).
+					if (skel.vars.IEVersion < 9)
+						$(':last-child').addClass('last-child');
 
-				$('#about-box').mouseleave(function() {
-					mouse = true;
-				});
+				// Init.
+					$window
+						.trigger('resize');
 
-				$('.project-box').mouseenter(function() {
-					mouse = false;
-				});
+					if (hash && hash in panels)
+						panels[hash]._activate(true);
 
-				$('.project-box').mouseleave(function() {
-					mouse = true;
-				});
-
-				$('#projects').click(function() {
-					$('#about-box').animate({ marginTop: '-24.7%', opacity: 0 }, 1000);
-					$('#proj-0').animate({opacity: 1},1000);
-				});
-
-				$('.next').click(function() {
-					moveLeftProjects();
-				});
-
-				/*$('#cancel').click(function() {
-					$('#form-main').fadeTo('fast', 0);
-					$("#overlay").css('z-index', 0);
-					$("#main").css('pointerEvents', 'auto');
-				});*/
+					$wrapper.fadeTo(400, 1.0);
+				
+			}
+					
 		});
 
-
-		jQuery(window)
-
-			// Remove "loading" class once the page has fully loaded.
-				.on('load', function() {
-					jQuery('body').removeClass('loading');
-				})
-
-			// Prevent scrolling on touch.
-				.on('touchmove', function() {
-					return false;
-				})
-
-			// Fix scroll position on orientation change.
-				.on('orientationchange', function() {
-					jQuery('body').scrollTop(0);
-				});
-
-
-})();
+})(jQuery);

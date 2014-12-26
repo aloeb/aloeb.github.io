@@ -1,26 +1,57 @@
 /*
-	Aerial by HTML5 UP
+	Astral by HTML5 UP
 	html5up.net | @n33co
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
 
-/* Header */
+/*********************************************************************************/
+/* Basic                                                                         */
+/*********************************************************************************/
 
-	#header nav a {
-		position: relative;
-		border: solid 1px white;
-		border-radius: 100%;
-		-ms-behavior: url("css/ie/PIE.htc");
+	body
+	{
+		background-image: url('../images/bg.jpg');
+		background-size: cover;
+		-ms-behavior: url('css/ie/backgroundsize.min.htc');
 	}
 
-		#header nav a:before {
-			border: 0;
+	/* Section/Article */
+
+		section,
+		article
+		{
 		}
+		
+			section > .last-child,
+			article > .last-child
+			{
+				margin-bottom: 0;
+			}
 
-/* Footer */
+			section.last-child,
+			article.last-child
+			{
+				margin-bottom: 0;
+			}
 
-	#footer {
-		background-image: url("images/footer.png");
-		background-position: bottom left;
-		background-repeat: repeat-x;
+/*********************************************************************************/
+/* Nav                                                                           */
+/*********************************************************************************/
+	
+	#nav
+	{
 	}
+	
+		#nav a
+		{
+		}
+		
+			#nav a span
+			{
+				display: none;
+			}
+			
+			#nav a:before
+			{
+				font-size: 1.75em;
+			}
