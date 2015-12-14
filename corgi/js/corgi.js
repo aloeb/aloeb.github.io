@@ -21,14 +21,33 @@ var requestAnimationFrame =
 
 var temp = 0;
 var init = function() {
-	var w = canvas.width / 50;
-	for (var i = 0; i < w*w; i++) {
-		if (Math.floor(i/w) % 2 == 1 && (i%w) % 2 == 1) continue;
-		blocks.push(new block(50*(i%w), 50*Math.floor(i/w), 'images/wall.svg'));
-	}
-
 	if (temp != 4/*!corgi.isReady()*/) { temp++; setTimeout(init, 100); }
-	else { console.log("starting!"); loop(); }
+	else { 
+		// build a 5x5 maze (that should have 40 edges)
+		var R = buildMaze(25, 40);
+		//var R = [ 0, 1, 2, 7, 8, 10, 15 ];
+
+		var w = canvas.width / 50;
+		var edgeNumb = 0;
+		var j = 0;
+		for (var i = 0; i < w*w; i++) {
+			// Skip cells
+			if (Math.floor(i/w) % 2 == 1 && (i%w) % 2 == 1) continue;
+			// Skip edges we should remove
+			// If we are on an "edge", a piece we can remove
+			if (i % 2 == 1 && i % w != 0 && (i+1) % w != 0 && i >= w && i < w*w - w) {
+				edgeNumb++;
+				if (j < R.length && R[j] == edgeNumb-1) { j++; continue; }
+			}
+			// Skip the ending block
+			if (i == w*(w-1)-1) continue;
+			// Otherwise put a wall in
+			blocks.push(new block(50*(i%w), 50*Math.floor(i/w), 'images/wall.svg'));
+		}
+
+		console.log("starting!");
+		loop();
+	}
 }
 
 var loop = function() {
