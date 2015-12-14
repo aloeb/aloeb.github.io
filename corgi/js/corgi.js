@@ -6,141 +6,118 @@
 
  "use strict";
 
-var canvas = document.getElementById('mCanvas');
 
-if (canvas.getContext) {
-	// Set up our canvas.
-	var context = canvas.getContext('2d');
-	context.canvas.width  = window.innerWidth;
-	context.canvas.height = window.innerHeight;
+// Create functions we'll need
 
-	// Set up our objects.
+var requestAnimationFrame =  
+    window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    window.oRequestAnimationFrame ||
+    function(callback) {
+    	return setTimeout(callback, 1000 / 60);
+    };
 
-	function thing(imgUrls) {
-		// Load all the images
-		this.init = 0;
-		this.images = [];
-
-		for (var i = 0; i < imgUrls.length; i++) {
-			this.images.push(new Image);
-			this.images[this.images.length - 1].onload = function() {
-				// Figure out solution for this.
-				this.init--;
-			};
-			this.images[this.images.length - 1].src = imgUrls[i];
-			this.init++;
-		}
-
-		this.isReady = function() { return this.init === 0; };
-
-		// Now let's init all our variables.
-		this.x = 0;
-		this.y = 0;
-		this.xv = 0;
-		this.yv = 0;
-		this.width = 100;
-		this.height = 100;
-
-		this.anim = 0;
-		this.animCount = 0;
-		this.animDelay = 3;
-
-		this.draw = function(ctx) {
-			ctx.drawImage(this.images[this.anim], this.x, this.y);
-		};
-
-		this.update = function() {
-			this.x += this.xv;
-			this.y += this.yv;
-
-			if (this.xv != 0 || this.yv != 0) {
-				if (this.animCount >= this.animDelay) {
-					this.anim = (this.anim + 1) % this.images.length;
-					this.animCount = 0;
-				} else {
-					this.animCount++;
-				}
-			} else {
-				this.anim = 0;
-			}
-		};
-	}
-	var corgi = new thing([ 'images/corgi.svg', 'images/corgi2.svg' ]);
-	var square = {
-	    'x': 50,
-	    'y': 50,
-	    'xv': 0,
-	    'yv': 0,
-	    'width': 100,
-	    'height': 100,
-	    'fill': '#00FF00'
-	};
-
-	// Set up our loop.
-
-	var requestAnimationFrame =  
-	        window.requestAnimationFrame ||
-	        window.webkitRequestAnimationFrame ||
-	        window.mozRequestAnimationFrame ||
-	        window.msRequestAnimationFrame ||
-	        window.oRequestAnimationFrame ||
-	        function(callback) {
-	        	return setTimeout(callback, 1000 / 60);
-	        };
-
-	var temp = 0;
-	var init = function() {
-		if (temp != 4/*!corgi.isReady()*/) { temp++; setTimeout(init, 100); }
-		else { console.log("starting!"); loop(); }
+var temp = 0;
+var init = function() {
+	var w = canvas.width / 50;
+	for (var i = 0; i < w*w; i++) {
+		if (Math.floor(i/w) % 2 == 1 && (i%w) % 2 == 1) continue;
+		blocks.push(new block(50*(i%w), 50*Math.floor(i/w), 'images/wall.svg'));
 	}
 
-	var loop = function() {
+	if (temp != 4/*!corgi.isReady()*/) { temp++; setTimeout(init, 100); }
+	else { console.log("starting!"); loop(); }
+}
+
+var loop = function() {
+	if (!done) {
 		update();
 		draw();
 		
 		requestAnimationFrame(loop);
-	};
+	}
+};
 
-	var draw = function() {
-	    // Clear the canvas
-	    context.clearRect(0, 0, canvas.width, canvas.height);
+var draw = function() {
+    // Clear the canvas
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
-	    // Draw the square
-	    //context.beginPath();
-	    //context.rect(square.x, square.y, square.width, square.height);
-	    //context.fillStyle = square.fill;
-	    //context.fill();
-	    corgi.draw(context);
-	};
+    // Draw the square
+    //context.beginPath();
+    //context.rect(square.x, square.y, square.width, square.height);
+    //context.fillStyle = square.fill;
+    //context.fill();
 
-	var update = function() {
-		corgi.update();
+    for (var i = 0; i < blocks.length; i++) {
+    	blocks[i].draw(context);
+    }
+
+    corgi.draw(context);
+};
+
+var update = function() {
+	corgi.update();
+	for (var i = 0; i < blocks.length; i++) {
+    	corgi.collides(blocks[i]);
+    }
+
+    if (corgi.wins(canvas.width, canvas.height)) { window.alert("win!"); done = true; }
+}
+
+var getMovement = function(e, distance) {
+	// Set some initial variables
+	var prop = 'xv';
+	var mult = 1;
+
+	// Just return false if the key isn't an arrow key
+	if (e.which < 37 || e.which > 40) {
+		return false;
 	}
 
-	// Set up key presses.
-
-	var getMovement = function(e, distance) {
-		// Set some initial variables
-		var prop = 'xv';
-		var mult = 1;
-
-		// Just return false if the key isn't an arrow key
-		if (e.which < 37 || e.which > 40) {
-			return false;
-		}
-
-		// If we're going left or up, we want to set the multiplier to -1
-		if (e.which === 37 || e.which === 38) {
-			mult = -1;
-		}
-
-		// If we're going up or down, we want to change the property we will be animating. 
-		if (e.which === 38 || e.which === 40) {
-			prop = 'yv';
-		}
-
-		return [prop, mult * distance];
+	// If we're going left or up, we want to set the multiplier to -1
+	if (e.which === 37 || e.which === 38) {
+		mult = -1;
 	}
+
+	// If we're going up or down, we want to change the property we will be animating. 
+	if (e.which === 38 || e.which === 40) {
+		prop = 'yv';
+	}
+
+	return [prop, mult * distance];
+}
+
+
+
+
+
+// Do actual stuff
+
+var canvas = document.getElementById('mCanvas');
+
+// Set up our objects.
+
+var done = false;
+
+var corgi = new thing(55, 55, [ 'images/corgi.svg', 'images/corgi2.svg' ]);
+
+var blocks = [];
+
+var background = new Image;
+background.src = 'images/ground.svg';
+
+if (canvas.getContext) {
+	// Set up our canvas.
+	var context = canvas.getContext('2d');
+	//context.canvas.width  = window.innerWidth;
+	//context.canvas.height = window.innerHeight;
+
+	// Set up our loop.
+
+	
 
 	document.body.addEventListener('keydown', function(e) {
 		e.preventDefault();
@@ -148,6 +125,9 @@ if (canvas.getContext) {
 		var info = getMovement(e, 3);
 
 		if (info) {
+			// So we can only move one direction at a time
+			corgi.xv = 0;
+			corgi.yv = 0;
 			corgi[info[0]] = info[1];
 	    };
 	});
