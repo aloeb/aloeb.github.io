@@ -39,6 +39,13 @@ var generateMaze = function() {
 	var R = buildMaze(25, 40);
 	//var R = [ 0, 1, 2, 7, 8, 10, 15 ];
 
+	var b = null;
+
+	if (Math.floor(Math.random() * 5) === 3) {
+		b = new bank(canvas.width / 2 - 25, canvas.height / 2 - 25, 50, 50, 'images/bank.svg');
+		console.log("hey");
+	}
+
 	var tile = 60;
 	var w = canvas.width / tile;
 	var edgeNumb = 0;
@@ -67,7 +74,7 @@ var generateMaze = function() {
 		blocks.push(new block(tile*(i%w), tile*Math.floor(i/w), tile, tile, 'images/wall.svg'));
 	}
 
-	return new maze(blocks, items, 'images/ground.svg');
+	return new maze(blocks, items, b, 'images/ground.svg');
 }
 
 var loop = function() {
@@ -97,6 +104,8 @@ var draw = function() {
     for (var i = 0; i < room.items.length; i++) {
     	room.items[i].draw(context);
     }
+
+    if (room.bank != null) room.bank.draw(context);
 
     corgi.draw(context);
 };
@@ -130,8 +139,15 @@ var update = function() {
     	}
 
     	if (room == null) room = generateMaze();
+    }
 
-    	//window.alert("win!"); done = true; 
+    if (room.bank != null && corgi.collidesWithBank(room.bank)) {
+    	if (room.bank.fill(score)) {
+    		alert("You win! Starting over.");
+    		prevRooms = [];
+    		room = generateMaze();
+    	}
+    	score = 0;
     }
 }
 

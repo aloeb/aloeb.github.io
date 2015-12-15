@@ -79,6 +79,13 @@ function thing(x, y, width, height, imgUrls) {
 		} else return false;
 	};
 
+	this.collidesWithBank = function(bank) {
+		if (this.intersects(bank.x, bank.y, bank.width, bank.height)) {
+			return true;
+		}
+		return false;
+	}
+
 	this.wins = function(width, height) {
 		if (this.x + this.width < 0) { return [true, 'x', width]; }
 		if (this.y + this.height < 0) { return [true, 'y', height]; }
@@ -113,11 +120,37 @@ function block(x, y, width, height, imgUrl) {
 	};
 }
 
-function maze(blocks, items, imgUrl) {
+function bank(x, y, w, h, imgUrl) {
+	this.x = x;
+	this.y = y;
+	this.width = w;
+	this.height = h;
+	this.image = new Image;
+	this.image.src = imgUrl;
+	this.points = 0;
+
+	this.draw = function(ctx) {
+		ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+		ctx.font = "16px Arial";
+		ctx.fillText("Filled: " + this.points + "/100",x,y);
+	}
+
+	this.fill = function(amt) {
+		this.points += amt;
+		if (this.points >= 100) {
+			this.points = 100;
+			return true;
+		}
+		return false;
+	}
+}
+
+function maze(blocks, items, bank, imgUrl) {
 	this.x = 0;
 	this.y = 0;
 	this.blocks = blocks;
 	this.items = items;
 	this.background = new Image;
 	this.background.src = imgUrl;
+	this.bank = bank;
 }
