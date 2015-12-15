@@ -57,7 +57,7 @@ var generateMaze = function() {
 			if (j < R.length && R[j] == edgeNumb-1) { j++; continue; }
 		}
 		//Now we want to pick the very edge pieces we will remove to be exits (could only be odd number i because next to cell)
-		else if (i < w || i >= w*w - w || i%w == 0 || i%w == w-1) && i%2 == 1) {
+		else if ((i < w || i >= w*w - w || i%w == 0 || i%w == w-1) && i%2 == 1) {
 			continue;
 		}
 
