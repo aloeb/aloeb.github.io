@@ -68,3 +68,14 @@ function edgeToSecondCell(edge, width) {
 		return edgeToFirstCell(edge, width) + width;
 	}
 }
+
+var pickExits = function(cells) {
+	var num = Math.floor(Math.random() * 3) + 1;
+	var bounds = Math.sqrt(cells)*4;
+	var ret = [];
+	for (var i = 0; i < num; i++) {
+		ret.push(Math.floor(Math.random()*bounds));
+	}
+	ret.sort(function(a, b) { return a > b ? 1 : -1});
+	return ret;
+}

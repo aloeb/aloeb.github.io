@@ -23,31 +23,51 @@ var temp = 0;
 var init = function() {
 	if (temp != 4/*!corgi.isReady()*/) { temp++; setTimeout(init, 100); }
 	else { 
-		// build a 5x5 maze (that should have 40 edges)
-		var R = buildMaze(25, 40);
-		//var R = [ 0, 1, 2, 7, 8, 10, 15 ];
-
-		var w = canvas.width / 50;
-		var edgeNumb = 0;
-		var j = 0;
-		for (var i = 0; i < w*w; i++) {
-			// Skip cells
-			if (Math.floor(i/w) % 2 == 1 && (i%w) % 2 == 1) continue;
-			// Skip edges we should remove
-			// If we are on an "edge", a piece we can remove
-			if (i % 2 == 1 && i % w != 0 && (i+1) % w != 0 && i >= w && i < w*w - w) {
-				edgeNumb++;
-				if (j < R.length && R[j] == edgeNumb-1) { j++; continue; }
-			}
-			// Skip the ending block
-			if (i == w*(w-1)-1) continue;
-			// Otherwise put a wall in
-			blocks.push(new block(50*(i%w), 50*Math.floor(i/w), 'images/wall.svg'));
-		}
+		corgi = new thing(65, 65, 40, 40, [ 'images/corgi.svg', 'images/corgi2.svg' ])
+		room = generateMaze();
 
 		console.log("starting!");
 		loop();
 	}
+}
+
+var generateMaze = function() {
+	var blocks = [];
+	var items = [];
+	
+	// build a 5x5 maze (that should have 40 edges and 25 cells)
+	var R = buildMaze(25, 40);
+	//var R = [ 0, 1, 2, 7, 8, 10, 15 ];
+
+	var tile = 60;
+	var w = canvas.width / tile;
+	var edgeNumb = 0;
+	var j = 0;
+	for (var i = 0; i < w*w; i++) {
+		// Skip cells
+		if (Math.floor(i/w) % 2 == 1 && (i%w) % 2 == 1) { 
+			// Let's just put a bone on every cell
+			items.push(new thing(tile*(i%w) + (tile-19)/2, tile*Math.floor(i/w) + (tile-11)/2, 19, 11, [ 'images/point.svg' ]));
+			continue;
+		}
+		// Skip edges we should remove
+		// If we are on an "edge", a piece we can remove
+		else if (i % 2 == 1 && i % w != 0 && (i+1) % w != 0 && i >= w && i < w*w - w) {
+			edgeNumb++;
+			if (j < R.length && R[j] == edgeNumb-1) { j++; continue; }
+		}
+		//Now we want to pick the very edge pieces we will remove to be exits (could only be odd number i because next to cell)
+		else if (i < w || i >= w*w - w || i%w == 0 || i%w == w-1) && i%2 == 1) {
+			continue;
+		}
+
+		// Skip the block the player is on
+		if (corgi.intersects(tile*(i%w), tile*Math.floor(i/w), tile, tile)) continue;
+		// Otherwise put a wall in
+		blocks.push(new block(tile*(i%w), tile*Math.floor(i/w), tile, tile, 'images/wall.svg'));
+	}
+
+	return new maze(blocks, items, 'images/ground.svg');
 }
 
 var loop = function() {
@@ -62,7 +82,7 @@ var loop = function() {
 var draw = function() {
     // Clear the canvas
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(background, 0, 0, canvas.width, canvas.height);
+    context.drawImage(room.background, 0, 0, canvas.width, canvas.height);
 
     // Draw the square
     //context.beginPath();
@@ -70,8 +90,12 @@ var draw = function() {
     //context.fillStyle = square.fill;
     //context.fill();
 
-    for (var i = 0; i < blocks.length; i++) {
-    	blocks[i].draw(context);
+    for (var i = 0; i < room.blocks.length; i++) {
+    	room.blocks[i].draw(context);
+    }
+
+    for (var i = 0; i < room.items.length; i++) {
+    	room.items[i].draw(context);
     }
 
     corgi.draw(context);
@@ -79,11 +103,36 @@ var draw = function() {
 
 var update = function() {
 	corgi.update();
-	for (var i = 0; i < blocks.length; i++) {
-    	corgi.collides(blocks[i]);
+	for (var i = 0; i < room.blocks.length; i++) {
+    	corgi.collides(room.blocks[i]);
     }
 
-    if (corgi.wins(canvas.width, canvas.height)) { window.alert("win!"); done = true; }
+    for (var i = 0; i < room.items.length; i++) {
+    	// check for adding points
+    	if (corgi.collidesWithItem(room.items[i])) {
+    		score++;
+    		room.items.splice(i, 1);
+    		i--;
+    	}
+    }
+
+    var won = corgi.wins(canvas.width, canvas.height);
+    if (won[0]) {
+    	corgi[won[1]] += won[2];
+    	prevRooms.push(room);
+    	room = null;
+    	for (var i = 0; i < prevRooms.length; i++) {
+    		// Basically add or subtract 1 from the x or y of the rooms because we moved like that.
+    		prevRooms[i][won[1]] += won[2] / Math.abs(won[2]);
+    		if (prevRooms[i].x === 0 && prevRooms[i].y === 0) {
+    			room = prevRooms[i];
+    		}
+    	}
+
+    	if (room == null) room = generateMaze();
+
+    	//window.alert("win!"); done = true; 
+    }
 }
 
 var getMovement = function(e, distance) {
@@ -121,12 +170,13 @@ var canvas = document.getElementById('mCanvas');
 
 var done = false;
 
-var corgi = new thing(55, 55, [ 'images/corgi.svg', 'images/corgi2.svg' ]);
+var corgi;
 
-var blocks = [];
+var room;
 
-var background = new Image;
-background.src = 'images/ground.svg';
+var prevRooms = [];
+
+var score = 0;
 
 if (canvas.getContext) {
 	// Set up our canvas.
@@ -135,7 +185,6 @@ if (canvas.getContext) {
 	//context.canvas.height = window.innerHeight;
 
 	// Set up our loop.
-
 	
 
 	document.body.addEventListener('keydown', function(e) {

@@ -1,4 +1,4 @@
-function thing(x, y, imgUrls) {
+function thing(x, y, width, height, imgUrls) {
 	// Load all the images
 	this.init = 0;
 	this.images = [];
@@ -20,8 +20,8 @@ function thing(x, y, imgUrls) {
 	this.y = y;
 	this.xv = 0;
 	this.yv = 0;
-	this.width = 40;
-	this.height = 40;
+	this.width = width;
+	this.height = height;
 
 	this.anim = 0;
 	this.animCount = 0;
@@ -55,9 +55,13 @@ function thing(x, y, imgUrls) {
 		}
 	};
 
+	this.intersects = function(x, y, w, h) {
+		return this.y + this.height > y && this.y < y + h
+				&& this.x + this.width > x && this.x < x + w;
+	}
+
 	this.collides = function(bl) {
-		if (this.y + this.height > bl.y && this.y < bl.y + bl.height
-		 && this.x + this.width > bl.x && this.x < bl.x + bl.width) {
+		if (this.intersects(bl.x, bl.y, bl.width, bl.height)) {
 			if (this.xv > 0 && this.x + this.width > bl.x)
 				this.x = bl.x - this.width;
 			if (this.xv < 0 && this.x < bl.x + bl.width)
@@ -69,19 +73,23 @@ function thing(x, y, imgUrls) {
 		}
 	};
 
-	this.wins = function(width, height) {
-		if (this.x < 0
-			 || this.y < 0
-			 || this.x > width
-			 || this.y > height) {
+	this.collidesWithItem = function(it) {
+		if (this.intersects(it.x, it.y, it.width, it.height)) {
 			return true;
-		} else {
-			return false;
-		}
-	}
+		} else return false;
+	};
+
+	this.wins = function(width, height) {
+		if (this.x + this.width < 0) { return [true, 'x', width]; }
+		if (this.y + this.height < 0) { return [true, 'y', height]; }
+		if (this.x > width) { return [true, 'x', -width]; }
+		if (this.y > height) { return [true, 'y', -height]; }
+
+		return [false, 'x', 0];
+	};
 }
 
-function block(x, y, imgUrl) {
+function block(x, y, width, height, imgUrl) {
 	// Load all the images
 	this.init = 0;
 
@@ -97,10 +105,19 @@ function block(x, y, imgUrl) {
 
 	this.x = x;
 	this.y = y;
-	this.width = 50;
-	this.height = 50;
+	this.width = width;
+	this.height = height;
 
 	this.draw = function(ctx) {
 			ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
 	};
+}
+
+function maze(blocks, items, imgUrl) {
+	this.x = 0;
+	this.y = 0;
+	this.blocks = blocks;
+	this.items = items;
+	this.background = new Image;
+	this.background.src = imgUrl;
 }
